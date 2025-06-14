@@ -415,49 +415,57 @@ class _MyAppState extends State<MyApp> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return ValueListenableBuilder<bool>(
-      valueListenable: _themeNotifier,
-      builder: (context, isDarkTheme, child) {
-        return ValueListenableBuilder<bool>(
-          valueListenable: _isVIPNotifier,
-          builder: (context, isVIP, child) {
-            return MaterialApp(
-              localizationsDelegates: context.localizationDelegates,
-              supportedLocales: context.supportedLocales,
-              locale: context.locale,
-              theme: isDarkTheme
-                  ? ThemeData(
-                      scaffoldBackgroundColor: const Color(0xFF2C2C2C).withValues(alpha: 0.95),
-                      appBarTheme: const AppBarTheme(backgroundColor: Colors.transparent, elevation: 0, titleTextStyle: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-                      cardTheme: CardTheme(color: Colors.black.withValues(alpha: 0.9), elevation: 4, margin: const EdgeInsets.all(8)),
-                      textTheme: ThemeData.dark().textTheme.apply(bodyColor: Colors.white, displayColor: Colors.white),
-                      dialogBackgroundColor: Colors.black.withValues(alpha: 0.95),
-                      hintColor: Colors.white70,
-                    )
-                  : ThemeData.dark().copyWith(
-                      scaffoldBackgroundColor: const Color(0xFFF2F4FF).withValues(alpha: 0.95),
-                      appBarTheme: const AppBarTheme(backgroundColor: Colors.transparent, elevation: 0, titleTextStyle: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-                      cardTheme: CardTheme(color: Colors.white.withValues(alpha: 0.9), elevation: 4, margin: const EdgeInsets.all(8)),
-                      textTheme: ThemeData.dark().textTheme.apply(bodyColor: Colors.black, displayColor: Colors.black),
-                      dialogBackgroundColor: Colors.white.withValues(alpha: 0.95),
-                      hintColor: Colors.grey,
+Widget build(BuildContext context) {
+  return ValueListenableBuilder<bool>(
+    valueListenable: _themeNotifier,
+    builder: (context, isDarkTheme, child) {
+      return ValueListenableBuilder<bool>(
+        valueListenable: _isVIPNotifier,
+        builder: (context, isVIP, child) {
+          return MaterialApp(
+            localizationsDelegates: context.localizationDelegates,
+            supportedLocales: context.supportedLocales,
+            locale: context.locale,
+            theme: isDarkTheme
+                ? ThemeData(
+                    scaffoldBackgroundColor: const Color(0xFF2C2C2C).withOpacity(0.95),
+                    appBarTheme: const AppBarTheme(backgroundColor: Colors.transparent, elevation: 0, titleTextStyle: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                    cardTheme: CardThemeData(
+                      color: Colors.black.withOpacity(0.9),
+                      elevation: 4,
+                      margin: const EdgeInsets.all(8),
                     ),
-              home: SplashScreen(
-                onLanguageChanged: _changeLanguage,
-                currentLanguage: _currentLanguage,
-                translations: _uiTexts,
-                isVIP: isVIP,
-                onVIPStatusChanged: _updateVIPStatus,
-                isDarkTheme: isDarkTheme,
-                onThemeChanged: _updateTheme,
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
+                    textTheme: ThemeData.dark().textTheme.apply(bodyColor: Colors.white, displayColor: Colors.white),
+                    dialogBackgroundColor: Colors.black.withOpacity(0.95),
+                    hintColor: Colors.white70,
+                  )
+                : ThemeData.dark().copyWith(
+                    scaffoldBackgroundColor: const Color(0xFFF2F4FF).withOpacity(0.95),
+                    appBarTheme: const AppBarTheme(backgroundColor: Colors.transparent, elevation: 0, titleTextStyle: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                    cardTheme: CardThemeData(
+                      color: Colors.white.withOpacity(0.9),
+                      elevation: 4,
+                      margin: const EdgeInsets.all(8),
+                    ),
+                    textTheme: ThemeData.dark().textTheme.apply(bodyColor: Colors.black, displayColor: Colors.black),
+                    dialogBackgroundColor: Colors.white.withOpacity(0.95),
+                    hintColor: Colors.grey,
+                  ),
+            home: SplashScreen(
+              onLanguageChanged: _changeLanguage,
+              currentLanguage: _currentLanguage,
+              translations: _uiTexts,
+              isVIP: isVIP,
+              onVIPStatusChanged: _updateVIPStatus,
+              isDarkTheme: isDarkTheme,
+              onThemeChanged: _updateTheme,
+            ),
+          );
+        },
+      );
+    },
+  );
+}
 }
 
 class SplashScreen extends StatefulWidget {
