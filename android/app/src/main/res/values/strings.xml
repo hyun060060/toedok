@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Toedok</string>
+    <string name="toedok_foreground_channel_name">Toedok Foreground Service</string>
+    <string name="toedok_background_service">Toedok Background Service</string>
+    <string name="app_running_message">TOEDOK</string>
+    <string name="analyzing_message">다람쥐가 TOEDOK을 굴리고 있는중입니다</string>
+</resources>

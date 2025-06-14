@@ -1,0 +1,67 @@
+name: toedok
+description: "A new Flutter project."
+publish_to: 'none'
+version: 1.0.0+25  # versionCode를 1에서 2로 증가
+
+environment:
+  sdk: '>=3.4.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  http: ^1.2.2  # 최신 버전 확인: flutter pub outdated
+  shared_preferences: ^2.2.3  # 최신 버전 확인
+  file_picker: ^8.0.7  # 최신 버전 확인
+  video_player: ^2.8.7
+  fl_chart: ^0.68.0
+  image: ^4.2.0
+  flutter_phoenix: ^1.1.1
+  google_mlkit_text_recognition: ^0.13.0
+  permission_handler: ^11.3.1
+  path_provider: ^2.1.4
+  device_info_plus: ^10.1.2
+  auto_size_text: ^3.0.0
+  flutter_tts: ^4.0.2
+  in_app_purchase: ^3.2.0
+  flutter_background_service: ^5.0.11  # 최신 버전 확인
+  easy_localization: ^3.0.7
+  flutter_local_notifications: ^17.2.2  # 최신 버전 확인
+  google_mobile_ads: ^5.0.0  # 최신 버전 확인: flutter pub outdated
+  collection: ^1.18.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0  # 최신 버전 확인: 예: ^5.0.0 이상
+  flutter_launcher_icons: ^0.13.1
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/icon/icon.png
+    - assets/video/splash_video.mp4
+    - assets/main screen.jpg
+    - assets/main screen2.jpg
+    - assets/translations/
+    - assets/tutorials/ko/
+    - assets/tutorials/en/
+    - assets/tutorials/zh/
+    - assets/tutorials/ja/
+    - assets/tutorials/hi/
+    - assets/icons/attraction.png  # 매력
+    - assets/icons/excited.png     # 신남 (제공된 이미지)
+    - assets/icons/sad.png         # 슬픔
+    - assets/icons/playful.png     # 장난
+    - assets/icons/curious.png     # 궁금
+    - assets/icons/angry.png       # 화남
+    - assets/icons/serious.png     # 진지
+    - assets/icons/chill.png       # chill가이
+    - assets/icons/cool.png        # 시크
+    - assets/icons/comfort.png     # 위로
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/icon.png"
+  adaptive_icon_background: "#7C4DFF"
+  adaptive_icon_foreground: "assets/icon/icon_foreground.png"

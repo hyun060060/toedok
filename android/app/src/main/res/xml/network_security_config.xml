@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- api.deepseek.com 도메인에 대해 HTTPS만 허용 -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">api.deepseek.com</domain>
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="user" />
+        </trust-anchors>
+    </domain-config>
+
+    <!-- translation.googleapis.com 도메인에 대해 HTTPS만 허용 -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">translation.googleapis.com</domain>
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="user" />
+        </trust-anchors>
+    </domain-config>
+
+    <!-- 기본 설정: 다른 모든 도메인에 대해 HTTPS 강제 -->
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="user" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>
