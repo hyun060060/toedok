@@ -24,6 +24,7 @@ import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:collection/collection.dart';
+import 'package:in_app_purchase_storekit/in_app_purchase_storekit.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -859,9 +860,46 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
     _vipColorController = AnimationController(vsync: this, duration: const Duration(seconds: 5))..repeat(reverse: true);
     _vipColorAnimation = Tween<double>(begin: 0, end: 1).animate(CurvedAnimation(parent: _vipColorController, curve: Curves.easeInOut));
     _initializeInAppPurchase();
-    _restoreVipStatus(); // 자동 복원 호출
+    _restoreVipStatus(); // 기존 호출 유지
   }
 
+  // 새 메서드 추가: VIP 상태 저장
+  Future<void> _saveVipStatus(bool isVip) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isVIP', isVip);
+    debugPrint("VIP 상태 저장: $isVip");
+  }
+
+  // 새 메서드 추가: VIP 상태 복원
+  Future<void> _restoreVipStatus() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final isVip = prefs.getBool('isVIP') ?? false;
+      if (isVip) {
+        widget.onVIPStatusChanged(true);
+        debugPrint("로컬에서 VIP 상태 복원 성공");
+        return;
+      }
+      // Google Play 및 Apple Store에서 구매 내역 복원
+      await _inAppPurchase.restorePurchases();
+      debugPrint("restorePurchases 호출 완료");
+    } catch (e) {
+      debugPrint("구매 복원 오류: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              "구매 복원 실패, 잠시 후 다시 시도해주세요.",
+              style: TextStyle(fontSize: 15, wordSpacing: 1.5),
+              maxLines: 2,
+            ),
+          ),
+        );
+      }
+    }
+  }
+
+  // 기존 메서드들 (수정된 인앱 결제 로직 포함)
   Future<void> _initializeInAppPurchase() async {
     debugPrint("Initializing InAppPurchase...");
     final bool isAvailable = await _inAppPurchase.isAvailable();
@@ -937,121 +975,91 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
     await _inAppPurchase.restorePurchases();
   }
 
-  // VIP 상태 로컬 저장
-  Future<void> _saveVipStatus(bool isVip) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('isVIP', isVip);
-    debugPrint("VIP 상태 저장: $isVip");
-  }
-
-  // VIP 상태 로컬 확인
-  Future<bool> _getVipStatus() async {
-    final prefs = await SharedPreferences.getInstance();
-    final isVip = prefs.getBool('isVIP') ?? false;
-    debugPrint("VIP 상태 조회: $isVip");
-    return isVip;
-  }
-
-  // 자동 복원 메서드
-  Future<void> _restoreVipStatus() async {
-    try {
-      final isVip = await _getVipStatus();
-      if (isVip) {
-        widget.onVIPStatusChanged(true);
-        debugPrint("로컬에서 VIP 상태 복원 성공");
-        return;
-      }
-      // Google Play에서 구매 내역 복원
-      await _inAppPurchase.restorePurchases();
-      debugPrint("restorePurchases 호출 완료");
-    } catch (e) {
-      debugPrint("구매 복원 오류: $e");
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              "구매 복원 실패, 잠시 후 다시 시도해주세요.",
-              style: TextStyle(fontSize: 15, wordSpacing: 1.5),
-              maxLines: 2,
-            ),
-          ),
+  Future<bool> verifyPurchase(String purchaseToken, String productId, String packageName) async {
+    if (Platform.isAndroid) {
+      final String verifyPurchaseApiUrl = 'https://us-central1-toedok-new.cloudfunctions.net/verifyPurchaseV2';
+      final client = http.Client();
+      try {
+        final response = await client.post(
+          Uri.parse(verifyPurchaseApiUrl),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'purchaseToken': purchaseToken,
+            'productId': productId,
+            'packageName': packageName,
+          }),
         );
+        debugPrint('Verify Purchase Request (Android): purchaseToken=$purchaseToken, productId=$productId, packageName=$packageName');
+        debugPrint('Verify Purchase Response (Android): ${response.statusCode} - ${response.body}');
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+          return data['isValid'] == true;
+        } else {
+          debugPrint('구매 검증 실패 (Android): ${response.statusCode} - ${response.body}');
+          return false;
+        }
+      } catch (e) {
+        debugPrint('구매 검증 오류 (Android): $e');
+        return false;
+      } finally {
+        client.close();
       }
+    } else if (Platform.isIOS) {
+      return await verifyApplePurchase(purchaseToken);
     }
+    return false;
   }
 
-  Future<bool> verifyPurchase(String purchaseToken) async {
-    final String verifyPurchaseApiUrl = 'https://us-central1-toedok-new.cloudfunctions.net/verifyPurchaseV2';
+  Future<bool> verifyApplePurchase(String receiptData) async {
+    final String verifyApplePurchaseApiUrl = 'https://us-central1-toedok-new.cloudfunctions.net/verifyApplePurchase';
     final client = http.Client();
     try {
       final response = await client.post(
-        Uri.parse(verifyPurchaseApiUrl),
+        Uri.parse(verifyApplePurchaseApiUrl),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          'purchaseToken': purchaseToken,
+          'receiptData': receiptData,
           'productId': 'toedok_vip_subscription',
-          'packageName': 'com.toedok',
         }),
       );
-      debugPrint('Verify Purchase Request: purchaseToken=$purchaseToken, productId=toedok_vip_subscription, packageName=com.toedok');
-      debugPrint('Verify Purchase Response: ${response.statusCode} - ${response.body}');
+      debugPrint('Verify Apple Purchase Request: receiptData=$receiptData');
+      debugPrint('Verify Apple Purchase Response: ${response.statusCode} - ${response.body}');
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         return data['isValid'] == true;
       } else {
-        debugPrint('구매 검증 실패: ${response.statusCode} - ${response.body}');
+        debugPrint('애플 구매 검증 실패: ${response.statusCode} - ${response.body}');
         return false;
       }
     } catch (e) {
-      debugPrint('구매 검증 오류: $e');
+      debugPrint('애플 구매 검증 오류: $e');
       return false;
     } finally {
       client.close();
     }
   }
 
-  
-Future<void> _listenToPurchaseUpdated(List<PurchaseDetails> purchaseDetailsList) async {
-  debugPrint("Purchase updated: ${purchaseDetailsList.length} items");
-  if (purchaseDetailsList.isEmpty) return;
+  Future<void> _listenToPurchaseUpdated(List<PurchaseDetails> purchaseDetailsList) async {
+    debugPrint("Purchase updated: ${purchaseDetailsList.length} items");
+    if (purchaseDetailsList.isEmpty) return;
 
-  for (final purchaseDetails in purchaseDetailsList) {
-    debugPrint("Purchase status: ${purchaseDetails.status}, ID: ${purchaseDetails.productID}");
+    for (final purchaseDetails in purchaseDetailsList) {
+      debugPrint("Purchase status: ${purchaseDetails.status}, ID: ${purchaseDetails.productID}");
 
-    if (purchaseDetails.status == PurchaseStatus.pending) {
-      debugPrint("구매 진행 중: ${purchaseDetails.productID}");
-      if (mounted) {
-        setState(() {
-          _isPurchasing = true;
-        });
-      }
-    } else {
-      if (purchaseDetails.status == PurchaseStatus.error) {
-        debugPrint("구매 오류: ${purchaseDetails.error?.message}");
+      if (purchaseDetails.status == PurchaseStatus.pending) {
+        debugPrint("구매 진행 중: ${purchaseDetails.productID}");
         if (mounted) {
           setState(() {
-            _isPurchasing = false;
-            _purchaseError = "구매 중 오류가 발생했습니다: ${purchaseDetails.error?.message}".tr();
+            _isPurchasing = true;
           });
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                _purchaseError!,
-                style: const TextStyle(fontSize: 15, wordSpacing: 1.5),
-                maxLines: 1,
-              ),
-            ),
-          );
         }
-      } else if (purchaseDetails.status == PurchaseStatus.purchased || purchaseDetails.status == PurchaseStatus.restored) {
-        debugPrint("구매 성공 또는 복원: ${purchaseDetails.productID}");
-        final purchaseToken = purchaseDetails.verificationData.serverVerificationData;
-        if (purchaseToken == null || purchaseToken.isEmpty) {
-          debugPrint('구매 검증 실패: purchaseToken이 없습니다.');
+      } else {
+        if (purchaseDetails.status == PurchaseStatus.error) {
+          debugPrint("구매 오류: ${purchaseDetails.error?.message}");
           if (mounted) {
             setState(() {
               _isPurchasing = false;
-              _purchaseError = "구매 검증에 실패했습니다.".tr();
+              _purchaseError = "구매 중 오류가 발생했습니다: ${purchaseDetails.error?.message}".tr();
             });
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -1063,44 +1071,100 @@ Future<void> _listenToPurchaseUpdated(List<PurchaseDetails> purchaseDetailsList)
               ),
             );
           }
-          continue;
-        }
+        } else if (purchaseDetails.status == PurchaseStatus.purchased || purchaseDetails.status == PurchaseStatus.restored) {
+          debugPrint("구매 성공 또는 복원: ${purchaseDetails.productID}");
+          String? verificationData;
+          if (Platform.isAndroid) {
+            verificationData = purchaseDetails.verificationData.serverVerificationData;
+          } else if (Platform.isIOS) {
+            final appStorePurchaseDetails = purchaseDetails as AppStorePurchaseDetails;
+            verificationData = appStorePurchaseDetails.verificationData.serverVerificationData;
+          }
 
-        final bool valid = await verifyPurchase(purchaseToken);
-        if (valid) {
-          debugPrint("구매 검증 성공: ${purchaseDetails.productID}");
-          widget.onVIPStatusChanged(true);
-          await _saveVipStatus(true); // VIP 상태 로컬 저장
-          if (!mounted) return;
-          setState(() {
-            _isPurchasing = false;
-            _purchaseError = null;
-          });
-
-          final prefs = await SharedPreferences.getInstance();
-          bool hasShownPurchaseSuccess = prefs.getBool('hasShownPurchaseSuccess') ?? false;
-          if (!hasShownPurchaseSuccess && purchaseDetails.status == PurchaseStatus.purchased) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text(
-                  "Payment Successful",
-                  style: TextStyle(fontSize: 15, wordSpacing: 1.5),
-                  maxLines: 1,
+          if (verificationData == null || verificationData.isEmpty) {
+            debugPrint('구매 검증 실패: verificationData가 없습니다.');
+            if (mounted) {
+              setState(() {
+                _isPurchasing = false;
+                _purchaseError = "구매 검증에 실패했습니다.".tr();
+              });
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    _purchaseError!,
+                    style: const TextStyle(fontSize: 15, wordSpacing: 1.5),
+                    maxLines: 1,
+                  ),
                 ),
-              ),
+              );
+            }
+            continue;
+          }
+
+          bool valid;
+          if (Platform.isAndroid) {
+            valid = await verifyPurchase(
+              verificationData,
+              purchaseDetails.productID,
+              'com.toedok',
             );
-            await prefs.setBool('hasShownPurchaseSuccess', true);
-            debugPrint("결제 성공 팝업 표시 완료, SharedPreferences에 저장");
           } else {
-            debugPrint("이미 결제 성공 팝업 표시됨 또는 복원, 팝업 스킵");
+            valid = await verifyApplePurchase(verificationData);
           }
-        } else {
-          debugPrint("구매 검증 실패: ${purchaseDetails.productID}");
-          await _saveVipStatus(false); // 검증 실패 시 VIP 해제
+
+          if (valid) {
+            debugPrint("구매 검증 성공: ${purchaseDetails.productID}");
+            widget.onVIPStatusChanged(true);
+            await _saveVipStatus(true); // VIP 상태 저장
+            if (!mounted) return;
+            setState(() {
+              _isPurchasing = false;
+              _purchaseError = null;
+            });
+
+            final prefs = await SharedPreferences.getInstance();
+            bool hasShownPurchaseSuccess = prefs.getBool('hasShownPurchaseSuccess') ?? false;
+            if (!hasShownPurchaseSuccess && purchaseDetails.status == PurchaseStatus.purchased) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text(
+                    "Payment Successful",
+                    style: TextStyle(fontSize: 15, wordSpacing: 1.5),
+                    maxLines: 1,
+                  ),
+                ),
+              );
+              await prefs.setBool('hasShownPurchaseSuccess', true);
+              debugPrint("결제 성공 팝업 표시 완료, SharedPreferences에 저장");
+            } else {
+              debugPrint("이미 결제 성공 팝업 표시됨 또는 복원, 팝업 스킵");
+            }
+          } else {
+            debugPrint("구매 검증 실패: ${purchaseDetails.productID}");
+            await _saveVipStatus(false); // VIP 상태 해제
+            if (mounted) {
+              setState(() {
+                _isPurchasing = false;
+                _purchaseError = "구매 검증에 실패했습니다.".tr();
+              });
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    _purchaseError!,
+                    style: const TextStyle(fontSize: 15, wordSpacing: 1.5),
+                    maxLines: 1,
+                  ),
+                ),
+              );
+            }
+          }
+        } else if (purchaseDetails.status == PurchaseStatus.canceled) {
+          debugPrint("구매 취소됨: ${purchaseDetails.productID}");
+          await _saveVipStatus(false); // VIP 상태 해제
           if (mounted) {
             setState(() {
               _isPurchasing = false;
-              _purchaseError = "구매 검증에 실패했습니다.".tr();
+              _purchaseError = "구매가 취소되었습니다.".tr();
             });
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -1113,34 +1177,15 @@ Future<void> _listenToPurchaseUpdated(List<PurchaseDetails> purchaseDetailsList)
             );
           }
         }
-      } else if (purchaseDetails.status == PurchaseStatus.canceled) {
-        debugPrint("구매 취소됨: ${purchaseDetails.productID}");
-        await _saveVipStatus(false); // 취소 시 VIP 해제
-        if (mounted) {
-          setState(() {
-            _isPurchasing = false;
-            _purchaseError = "구매가 취소되었습니다.".tr();
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                _purchaseError!,
-                style: const TextStyle(fontSize: 15, wordSpacing: 1.5),
-                maxLines: 1,
-              ),
-            ),
-          );
-        }
-      }
 
-      if (purchaseDetails.pendingCompletePurchase) {
-        debugPrint("Completing purchase: ${purchaseDetails.productID}");
-        await _inAppPurchase.completePurchase(purchaseDetails);
-        debugPrint("Purchase completed: ${purchaseDetails.productID}");
+        if (purchaseDetails.pendingCompletePurchase) {
+          debugPrint("Completing purchase: ${purchaseDetails.productID}");
+          await _inAppPurchase.completePurchase(purchaseDetails);
+          debugPrint("Purchase completed: ${purchaseDetails.productID}");
+        }
       }
     }
   }
-}
 
   Future<void> _buyVIPSubscription() async {
     if (_isPurchasing || !_isAvailable || _products.isEmpty) {
@@ -1186,6 +1231,7 @@ Future<void> _listenToPurchaseUpdated(List<PurchaseDetails> purchaseDetailsList)
 
     final PurchaseParam purchaseParam = PurchaseParam(
       productDetails: productDetails,
+      applicationUserName: null,
     );
 
     setState(() {
@@ -1195,7 +1241,11 @@ Future<void> _listenToPurchaseUpdated(List<PurchaseDetails> purchaseDetailsList)
 
     try {
       debugPrint("Starting purchase for: ${productDetails.id}");
-      await _inAppPurchase.buyNonConsumable(purchaseParam: purchaseParam);
+      if (Platform.isIOS) {
+        await _inAppPurchase.buyNonConsumable(purchaseParam: purchaseParam);
+      } else {
+        await _inAppPurchase.buyNonConsumable(purchaseParam: purchaseParam);
+      }
       debugPrint("Purchase initiated successfully");
     } catch (e) {
       debugPrint("구매 실패: $e");
