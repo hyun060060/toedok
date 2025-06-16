@@ -1414,289 +1414,290 @@ Future<void> _listenToPurchaseUpdated(List<PurchaseDetails> purchaseDetailsList)
   }
 
   @override
-  Widget build(BuildContext context) {
-    return ValueListenableBuilder<bool>(
-      valueListenable: context.findAncestorStateOfType<_MyAppState>()!._themeNotifier,
-      builder: (context, isDarkTheme, child) {
-        return ValueListenableBuilder<bool>(
-          valueListenable: context.findAncestorStateOfType<_MyAppState>()!._isVIPNotifier,
-          builder: (context, isVIP, child) {
-            return Scaffold(
-              body: LayoutBuilder(
-                builder: (context, constraints) {
-                  return Stack(
-                    children: [
-                      Container(
-                        width: constraints.maxWidth,
-                        height: constraints.maxHeight,
-                        decoration: BoxDecoration(
-                          image: DecorationImage(
-                            image: AssetImage(isDarkTheme ? "assets/main screen2.jpg" : "assets/main screen.jpg"),
-                            fit: BoxFit.cover,
-                            onError: (exception, stackTrace) {
-                              debugPrint('테마 이미지 로드 실패: $exception');
-                            },
-                          ),
+Widget build(BuildContext context) {
+  return ValueListenableBuilder<bool>(
+    valueListenable: context.findAncestorStateOfType<_MyAppState>()!._themeNotifier,
+    builder: (context, isDarkTheme, child) {
+      return ValueListenableBuilder<bool>(
+        valueListenable: context.findAncestorStateOfType<_MyAppState>()!._isVIPNotifier,
+        builder: (context, isVIP, child) {
+          return Scaffold(
+            body: LayoutBuilder(
+              builder: (context, constraints) {
+                return Stack(
+                  children: [
+                    Container(
+                      width: constraints.maxWidth,
+                      height: constraints.maxHeight,
+                      decoration: BoxDecoration(
+                        image: DecorationImage(
+                          image: AssetImage(isDarkTheme ? "assets/main screen2.jpg" : "assets/main screen.jpg"),
+                          fit: BoxFit.cover,
+                          onError: (exception, stackTrace) {
+                            debugPrint('테마 이미지 로드 실패: $exception');
+                          },
                         ),
                       ),
-                      Positioned(
-                        right: 10,
-                        top: 25,
-                        child: GestureDetector(
-                          onTap: () => Scaffold.of(context).openEndDrawer(),
-                          child: Icon(
-                            Icons.menu,
-                            color: isDarkTheme ? Colors.white : Colors.white,
-                            size: 36,
-                          ),
+                    ),
+                    Positioned(
+                      right: 10,
+                      top: 25,
+                      child: GestureDetector(
+                        onTap: () => Scaffold.of(context).openEndDrawer(),
+                        child: Icon(
+                          Icons.menu,
+                          color: isDarkTheme ? Colors.white : Colors.white,
+                          size: 36,
                         ),
                       ),
-                      Align(
-                        alignment: Alignment.bottomCenter,
-                        child: Padding(
-                          padding: const EdgeInsets.only(bottom: 28),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              GestureDetector(
-                                onTapDown: (_) => _screenshotTapController.forward(),
-                                onTapUp: (_) {
-                                  _screenshotTapController.reverse();
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => MainScreenshotScreen(
-                                        onLanguageChanged: widget.onLanguageChanged,
-                                        currentLanguage: widget.currentLanguage,
-                                        translations: widget.translations,
-                                        isVIP: isVIP,
-                                        onVIPStatusChanged: widget.onVIPStatusChanged,
-                                        isDarkTheme: isDarkTheme,
-                                        onThemeChanged: widget.onThemeChanged,
-                                        onShowVIPDialog: _showVIPDialog,
+                    ),
+                    Align(
+                      alignment: Alignment.bottomCenter,
+                      child: Padding(
+                        padding: EdgeInsets.only(
+                          bottom: MediaQuery.of(context).viewPadding.bottom + 12, // 내비게이션 바 위 12px
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            GestureDetector(
+                              onTapDown: (_) => _screenshotTapController.forward(),
+                              onTapUp: (_) {
+                                _screenshotTapController.reverse();
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => MainScreenshotScreen(
+                                      onLanguageChanged: widget.onLanguageChanged,
+                                      currentLanguage: widget.currentLanguage,
+                                      translations: widget.translations,
+                                      isVIP: isVIP,
+                                      onVIPStatusChanged: widget.onVIPStatusChanged,
+                                      isDarkTheme: isDarkTheme,
+                                      onThemeChanged: widget.onThemeChanged,
+                                      onShowVIPDialog: _showVIPDialog,
+                                    ),
+                                  ),
+                                );
+                              },
+                              onTapCancel: () => _screenshotTapController.reverse(),
+                              child: AnimatedBuilder(
+                                animation: Listenable.merge([_colorAnimation, _screenshotTapScale]),
+                                builder: (context, child) {
+                                  return Transform.scale(
+                                    scale: _screenshotTapScale.value,
+                                    child: Container(
+                                      width: 236,
+                                      height: 60,
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          begin: Alignment.topLeft.add(Alignment(_colorAnimation.value * 2 - 1, _colorAnimation.value * 2 - 1)),
+                                          end: Alignment.bottomRight.add(Alignment(_colorAnimation.value * 2 - 1, _colorAnimation.value * 2 - 1)),
+                                          colors: gradientColors,
+                                          stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
+                                        ),
+                                        borderRadius: BorderRadius.circular(8),
+                                        boxShadow: const [
+                                          BoxShadow(
+                                            color: Color(0x3F000000),
+                                            blurRadius: 4,
+                                            offset: Offset(0, 4),
+                                            spreadRadius: 0,
+                                          ),
+                                        ],
+                                      ),
+                                      child: Center(
+                                        child: AutoSizeText(
+                                          'SCREEN SHOT',
+                                          textAlign: TextAlign.center,
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w700,
+                                            height: 1,
+                                            wordSpacing: 1.5,
+                                          ),
+                                          minFontSize: 24,
+                                          maxFontSize: 48,
+                                          stepGranularity: 0.1,
+                                          overflow: TextOverflow.ellipsis,
+                                          maxLines: 1,
+                                        ),
                                       ),
                                     ),
                                   );
                                 },
-                                onTapCancel: () => _screenshotTapController.reverse(),
-                                child: AnimatedBuilder(
-                                  animation: Listenable.merge([_colorAnimation, _screenshotTapScale]),
-                                  builder: (context, child) {
-                                    return Transform.scale(
-                                      scale: _screenshotTapScale.value,
-                                      child: Container(
-                                        width: 236,
-                                        height: 60,
-                                        padding: const EdgeInsets.all(12),
-                                        decoration: BoxDecoration(
-                                          gradient: LinearGradient(
-                                            begin: Alignment.topLeft.add(Alignment(_colorAnimation.value * 2 - 1, _colorAnimation.value * 2 - 1)),
-                                            end: Alignment.bottomRight.add(Alignment(_colorAnimation.value * 2 - 1, _colorAnimation.value * 2 - 1)),
-                                            colors: gradientColors,
-                                            stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
-                                          ),
-                                          borderRadius: BorderRadius.circular(8),
-                                          boxShadow: const [
-                                            BoxShadow(
-                                              color: Color(0x3F000000),
-                                              blurRadius: 4,
-                                              offset: Offset(0, 4),
-                                              spreadRadius: 0,
-                                            ),
-                                          ],
-                                        ),
-                                        child: Center(
-                                          child: AutoSizeText(
-                                            'SCREEN SHOT',
-                                            textAlign: TextAlign.center,
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.w700,
-                                              height: 1,
-                                              wordSpacing: 1.5,
-                                            ),
-                                            minFontSize: 24,
-                                            maxFontSize: 48,
-                                            stepGranularity: 0.1,
-                                            overflow: TextOverflow.ellipsis,
-                                            maxLines: 1,
-                                          ),
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
                               ),
-                              const SizedBox(height: 12),
-                              GestureDetector(
-                                onTapDown: (_) => _tapController.forward(),
-                                onTapUp: (_) {
-                                  _tapController.reverse();
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => MainScreen(
-                                        onLanguageChanged: widget.onLanguageChanged,
-                                        currentLanguage: widget.currentLanguage,
-                                        translations: widget.translations,
-                                        isVIP: isVIP,
-                                        onVIPStatusChanged: widget.onVIPStatusChanged,
-                                        isDarkTheme: isDarkTheme,
-                                        onThemeChanged: widget.onThemeChanged,
-                                        onShowVIPDialog: _showVIPDialog,
+                            ),
+                            const SizedBox(height: 12),
+                            GestureDetector(
+                              onTapDown: (_) => _tapController.forward(),
+                              onTapUp: (_) {
+                                _tapController.reverse();
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => MainScreen(
+                                      onLanguageChanged: widget.onLanguageChanged,
+                                      currentLanguage: widget.currentLanguage,
+                                      translations: widget.translations,
+                                      isVIP: isVIP,
+                                      onVIPStatusChanged: widget.onVIPStatusChanged,
+                                      isDarkTheme: isDarkTheme,
+                                      onThemeChanged: widget.onThemeChanged,
+                                      onShowVIPDialog: _showVIPDialog,
+                                    ),
+                                  ),
+                                );
+                              },
+                              onTapCancel: () => _tapController.reverse(),
+                              child: AnimatedBuilder(
+                                animation: Listenable.merge([_colorAnimation, _tapScale]),
+                                builder: (context, child) {
+                                  return Transform.scale(
+                                    scale: _tapScale.value,
+                                    child: Container(
+                                      width: 236,
+                                      height: 46,
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          begin: Alignment.topLeft.add(Alignment(_colorAnimation.value * 2 - 1, _colorAnimation.value * 2 - 1)),
+                                          end: Alignment.bottomRight.add(Alignment(_colorAnimation.value * 2 - 1, _colorAnimation.value * 2 - 1)),
+                                          colors: gradientColors,
+                                          stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
+                                        ),
+                                        borderRadius: BorderRadius.circular(8),
+                                        boxShadow: const [
+                                          BoxShadow(
+                                            color: Color(0x3F000000),
+                                            blurRadius: 4,
+                                            offset: Offset(0, 4),
+                                            spreadRadius: 0,
+                                          ),
+                                        ],
+                                      ),
+                                      child: Center(
+                                        child: AutoSizeText(
+                                          'TOEDOK',
+                                          textAlign: TextAlign.center,
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w700,
+                                            height: 1,
+                                            wordSpacing: 1.5,
+                                          ),
+                                          minFontSize: 24,
+                                          maxFontSize: 48,
+                                          stepGranularity: 0.1,
+                                          overflow: TextOverflow.ellipsis,
+                                          maxLines: 1,
+                                        ),
                                       ),
                                     ),
                                   );
                                 },
-                                onTapCancel: () => _tapController.reverse(),
-                                child: AnimatedBuilder(
-                                  animation: Listenable.merge([_colorAnimation, _tapScale]),
-                                  builder: (context, child) {
-                                    return Transform.scale(
-                                      scale: _tapScale.value,
-                                      child: Container(
-                                        width: 236,
-                                        height: 46,
-                                        padding: const EdgeInsets.all(12),
-                                        decoration: BoxDecoration(
-                                          gradient: LinearGradient(
-                                            begin: Alignment.topLeft.add(Alignment(_colorAnimation.value * 2 - 1, _colorAnimation.value * 2 - 1)),
-                                            end: Alignment.bottomRight.add(Alignment(_colorAnimation.value * 2 - 1, _colorAnimation.value * 2 - 1)),
-                                            colors: gradientColors,
-                                            stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
-                                          ),
-                                          borderRadius: BorderRadius.circular(8),
-                                          boxShadow: const [
-                                            BoxShadow(
-                                              color: Color(0x3F000000),
-                                              blurRadius: 4,
-                                              offset: Offset(0, 4),
-                                              spreadRadius: 0,
-                                            ),
-                                          ],
-                                        ),
-                                        child: Center(
-                                          child: AutoSizeText(
-                                            'TOEDOK',
-                                            textAlign: TextAlign.center,
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.w700,
-                                              height: 1,
-                                              wordSpacing: 1.5,
-                                            ),
-                                            minFontSize: 24,
-                                            maxFontSize: 48,
-                                            stepGranularity: 0.1,
-                                            overflow: TextOverflow.ellipsis,
-                                            maxLines: 1,
-                                          ),
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
                               ),
-                              const SizedBox(height: 12),
-                            ],
-                          ),
+                            ),
+                            const SizedBox(height: 12),
+                          ],
                         ),
                       ),
-                    ],
-                  );
-                },
-              ),
-              
-endDrawer: Drawer(
-  width: 250,
-  backgroundColor: isDarkTheme ? const Color(0xFF2C2C2C) : Colors.white,
-  elevation: 8,
-  child: Container(
-    decoration: const BoxDecoration(
-      borderRadius: BorderRadius.only(topLeft: Radius.circular(16), bottomLeft: Radius.circular(16)),
-    ),
-    child: SingleChildScrollView(
-      physics: const NeverScrollableScrollPhysics(),
-      child: Column(
-        children: [
-          const SizedBox(height: 60),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: AnimatedBuilder(
-              animation: _vipColorAnimation,
-              builder: (context, child) {
-                return ShaderMask(
-                  shaderCallback: (bounds) => LinearGradient(
-                    begin: Alignment.topLeft.add(Alignment(_vipColorAnimation.value * 2 - 1, _vipColorAnimation.value * 2 - 1)),
-                    end: Alignment.bottomRight.add(Alignment(_vipColorAnimation.value * 2 - 1, _vipColorAnimation.value * 2 - 1)),
-                    colors: gradientColors,
-                    stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
-                  ).createShader(bounds),
-                  child: Text(
-                    isVIP ? 'VIP' : '',
-                    style: const TextStyle(color: Colors.white, fontSize: 40, fontWeight: FontWeight.bold, wordSpacing: 1.5),
-                  ),
+                    ),
+                  ],
                 );
               },
             ),
-          ),
-          _buildDrawerItem(
-            text: "VIP".tr(),
-            onTap: () {
-              Navigator.pop(context);
-              _showVIPDialog();
-            },
-            isDarkTheme: isDarkTheme,
-          ),
-          _buildDrawerItem(
-            text: "튜토리얼".tr(),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => TutorialScreen(
-                    onLanguageChanged: widget.onLanguageChanged,
-                    currentLanguage: widget.currentLanguage,
-                    translations: widget.translations,
-                    isVIP: isVIP,
-                    onVIPStatusChanged: widget.onVIPStatusChanged,
-                    isDarkTheme: isDarkTheme,
-                    onThemeChanged: widget.onThemeChanged,
+            endDrawer: Drawer(
+              width: 250,
+              backgroundColor: isDarkTheme ? const Color(0xFF2C2C2C) : Colors.white,
+              elevation: 8,
+              child: Container(
+                decoration: const BoxDecoration(
+                  borderRadius: BorderRadius.only(topLeft: Radius.circular(16), bottomLeft: Radius.circular(16)),
+                ),
+                child: SingleChildScrollView(
+                  physics: const NeverScrollableScrollPhysics(),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 60),
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: AnimatedBuilder(
+                          animation: _vipColorAnimation,
+                          builder: (context, child) {
+                            return ShaderMask(
+                              shaderCallback: (bounds) => LinearGradient(
+                                begin: Alignment.topLeft.add(Alignment(_vipColorAnimation.value * 2 - 1, _vipColorAnimation.value * 2 - 1)),
+                                end: Alignment.bottomRight.add(Alignment(_vipColorAnimation.value * 2 - 1, _vipColorAnimation.value * 2 - 1)),
+                                colors: gradientColors,
+                                stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
+                              ).createShader(bounds),
+                              child: Text(
+                                isVIP ? 'VIP' : '',
+                                style: const TextStyle(color: Colors.white, fontSize: 40, fontWeight: FontWeight.bold, wordSpacing: 1.5),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      _buildDrawerItem(
+                        text: "VIP".tr(),
+                        onTap: () {
+                          Navigator.pop(context);
+                          _showVIPDialog();
+                        },
+                        isDarkTheme: isDarkTheme,
+                      ),
+                      _buildDrawerItem(
+                        text: "튜토리얼".tr(),
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => TutorialScreen(
+                                onLanguageChanged: widget.onLanguageChanged,
+                                currentLanguage: widget.currentLanguage,
+                                translations: widget.translations,
+                                isVIP: isVIP,
+                                onVIPStatusChanged: widget.onVIPStatusChanged,
+                                isDarkTheme: isDarkTheme,
+                                onThemeChanged: widget.onThemeChanged,
+                              ),
+                            ),
+                          );
+                        },
+                        isDarkTheme: isDarkTheme,
+                      ),
+                      _buildDrawerItem(
+                        text: _getLanguageButtonText(),
+                        onTap: () {
+                          Navigator.pop(context);
+                          _showLanguageSelectionDialog(context);
+                        },
+                        isDarkTheme: isDarkTheme,
+                      ),
+                      _buildDrawerItemWithSwitch(
+                        text: "테마".tr(),
+                        value: isDarkTheme,
+                        onChanged: (value) {
+                          widget.onThemeChanged(value);
+                          debugPrint("테마 변경 상태: $value");
+                        },
+                        isDarkTheme: isDarkTheme,
+                      ),
+                    ],
                   ),
                 ),
-              );
-            },
-            isDarkTheme: isDarkTheme,
-          ),
-          _buildDrawerItem(
-            text: _getLanguageButtonText(),
-            onTap: () {
-              Navigator.pop(context);
-              _showLanguageSelectionDialog(context);
-            },
-            isDarkTheme: isDarkTheme,
-          ),
-          _buildDrawerItemWithSwitch(
-            text: "테마".tr(),
-            value: isDarkTheme,
-            onChanged: (value) {
-              widget.onThemeChanged(value);
-              debugPrint("테마 변경 상태: $value");
-            },
-            isDarkTheme: isDarkTheme,
-          ),
-        ],
-      ),
-    ),
-  ),
-),
-            );
-          },
-        );
-      },
-    );
-  }
+              ),
+            ),
+          );
+        },
+      );
+    },
+  );
+}
 
   String _getLanguageButtonText() {
     final languages = {
@@ -3280,339 +3281,326 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    if (isInitialLoading) {
-      return Scaffold(
-        backgroundColor: widget.isDarkTheme ? const Color(0xFF2C2C2C) : Colors.white,
-        body: const Center(child: CircularProgressIndicator(color: Color(0xFF7539BB))),
-      );
-    }
+  
+@override
+Widget build(BuildContext context) {
+  if (isInitialLoading) {
+    return Scaffold(
+      backgroundColor: widget.isDarkTheme ? const Color(0xFF2C2C2C) : Colors.white,
+      body: const Center(child: CircularProgressIndicator(color: Color(0xFF7539BB))),
+    );
+  }
 
-    final displayExamples = [...currentExamples, ...pastExamples];
+  final displayExamples = [...currentExamples, ...pastExamples];
 
-    return ValueListenableBuilder<bool>(
-      valueListenable: context.findAncestorStateOfType<_MyAppState>()!._themeNotifier,
-      builder: (context, isDarkTheme, child) {
-        return ValueListenableBuilder<bool>(
-          valueListenable: context.findAncestorStateOfType<_MyAppState>()!._isVIPNotifier,
-          builder: (context, isVIP, child) {
-            return Scaffold(
-              backgroundColor: isDarkTheme ? const Color(0xFF2C2C2C) : Colors.white,
-              appBar: PreferredSize(
-                preferredSize: const Size.fromHeight(kToolbarHeight),
-                child: AnimatedBuilder(
-                  animation: _headerColorAnimation,
-                  builder: (context, child) {
-                    return ClipRRect(
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft.add(Alignment(_headerColorAnimation.value * 2 - 1, _headerColorAnimation.value * 2 - 1)),
-                              end: Alignment.bottomRight.add(Alignment(_headerColorAnimation.value * 2 - 1, _headerColorAnimation.value * 2 - 1)),
-                              colors: gradientColors,
-                              stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
-                            ),
+  return ValueListenableBuilder<bool>(
+    valueListenable: context.findAncestorStateOfType<_MyAppState>()!._themeNotifier,
+    builder: (context, isDarkTheme, child) {
+      return ValueListenableBuilder<bool>(
+        valueListenable: context.findAncestorStateOfType<_MyAppState>()!._isVIPNotifier,
+        builder: (context, isVIP, child) {
+          return Scaffold(
+            resizeToAvoidBottomInset: false, // 키보드로 화면 크기 조정 비활성화
+            backgroundColor: isDarkTheme ? const Color(0xFF2C2C2C) : Colors.white,
+            appBar: PreferredSize(
+              preferredSize: const Size.fromHeight(kToolbarHeight),
+              child: AnimatedBuilder(
+                animation: _headerColorAnimation,
+                builder: (context, child) {
+                  return ClipRRect(
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft.add(Alignment(_headerColorAnimation.value * 2 - 1, _headerColorAnimation.value * 2 - 1)),
+                            end: Alignment.bottomRight.add(Alignment(_headerColorAnimation.value * 2 - 1, _headerColorAnimation.value * 2 - 1)),
+                            colors: gradientColors,
+                            stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
                           ),
-                          child: AppBar(
-                            leadingWidth: 56,
-                            leading: IconButton(
-                              icon: const Icon(Icons.arrow_back, color: Colors.white),
-                              onPressed: () => Navigator.pop(context),
-                            ),
-                            title: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Icon(roleIcons[widget.selectedRole], color: Colors.white, size: 20),
-                                const SizedBox(width: 8),
-                                Text(
-                                  widget.selectedRole.tr(),
-                                  style: const TextStyle(color: Colors.white, fontSize: 16, wordSpacing: 1.5),
-                                  overflow: TextOverflow.ellipsis,
-                                  maxLines: 1,
-                                ),
-                                const SizedBox(width: 12),
-                                Text(
-                                  widget.name,
-                                  style: const TextStyle(color: Colors.white, fontSize: 16, wordSpacing: 1.5),
-                                  overflow: TextOverflow.ellipsis,
-                                  maxLines: 1,
-                                ),
-                              ],
-                            ),
-                            backgroundColor: Colors.transparent,
-                            elevation: 0,
-                            actions: [
-                              Padding(
-                                padding: const EdgeInsets.only(right: 8.0),
-                                child: Center(
-                                  child: Text(
-                                    isVIP ? 'VIP' : '',
-                                    style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold, wordSpacing: 1.5),
-                                  ),
-                                ),
+                        ),
+                        child: AppBar(
+                          leadingWidth: 56,
+                          leading: IconButton(
+                            icon: const Icon(Icons.arrow_back, color: Colors.white),
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                          title: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Icon(roleIcons[widget.selectedRole], color: Colors.white, size: 20),
+                              const SizedBox(width: 8),
+                              Text(
+                                widget.selectedRole.tr(),
+                                style: const TextStyle(color: Colors.white, fontSize: 16, wordSpacing: 1.5),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
                               ),
-                              Padding(
-                                padding: const EdgeInsets.only(right: 16.0),
-                                child: GestureDetector(
-                                  onTap: _showSavedQuotesDialog,
-                                  child: const Icon(Icons.bookmark, color: Colors.white),
-                                ),
+                              const SizedBox(width: 12),
+                              Text(
+                                widget.name,
+                                style: const TextStyle(color: Colors.white, fontSize: 16, wordSpacing: 1.5),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
                               ),
                             ],
                           ),
+                          backgroundColor: Colors.transparent,
+                          elevation: 0,
+                          actions: [
+                            Padding(
+                              padding: const EdgeInsets.only(right: 8.0),
+                              child: Center(
+                                child: Text(
+                                  isVIP ? 'VIP' : '',
+                                  style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold, wordSpacing: 1.5),
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(right: 16.0),
+                              child: GestureDetector(
+                                onTap: _showSavedQuotesDialog,
+                                child: const Icon(Icons.bookmark, color: Colors.white),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    );
-                  },
-                ),
-              ),
-              body: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 12.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.arrow_drop_down, size: 24, color: Color(0xFF7539BB)),
-                        const SizedBox(width: 8),
-                        AnimatedBuilder(
-                          animation: _textColorAnimation,
-                          builder: (context, child) {
-                            return ShaderMask(
-                              shaderCallback: (bounds) => LinearGradient(
-                                begin: Alignment.topLeft.add(Alignment(_textColorAnimation.value * 2 - 1, _textColorAnimation.value * 2 - 1)),
-                                end: Alignment.bottomRight.add(Alignment(_textColorAnimation.value * 2 - 1, _textColorAnimation.value * 2 - 1)),
-                                colors: gradientColors,
-                                stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
-                              ).createShader(bounds),
-                              child: Text(
-                                "다람쥐가 토독여준 멘트".tr(),
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.white,
-                                  wordSpacing: 1.5,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 2,
-                                textAlign: TextAlign.center,
-                              ),
-                            );
-                          },
-                        ),
-                        const SizedBox(width: 8),
-                        const Icon(Icons.arrow_drop_down, size: 24, color: Color(0xFF7539BB)),
-                      ],
                     ),
-                  ),
-                  Expanded(
-                    child: displayExamples.isEmpty && !isLoading
-                        ? Center(
+                  );
+                },
+              ),
+            ),
+            body: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.arrow_drop_down, size: 24, color: Color(0xFF7539BB)),
+                      const SizedBox(width: 8),
+                      AnimatedBuilder(
+                        animation: _textColorAnimation,
+                        builder: (context, child) {
+                          return ShaderMask(
+                            shaderCallback: (bounds) => LinearGradient(
+                              begin: Alignment.topLeft.add(Alignment(_textColorAnimation.value * 2 - 1, _textColorAnimation.value * 2 - 1)),
+                              end: Alignment.bottomRight.add(Alignment(_textColorAnimation.value * 2 - 1, _textColorAnimation.value * 2 - 1)),
+                              colors: gradientColors,
+                              stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
+                            ).createShader(bounds),
                             child: Text(
-                              "아직 생성된 멘트가 없습니다.\n상대방의 말을 입력해 보세요!".tr(),
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
+                              "다람쥐가 토독여준 멘트".tr(),
+                              style: const TextStyle(
                                 fontSize: 16,
-                                color: widget.isDarkTheme ? Colors.white70 : Colors.grey,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.white,
                                 wordSpacing: 1.5,
                               ),
-                              overflow: TextOverflow.visible,
+                              overflow: TextOverflow.ellipsis,
                               maxLines: 2,
+                              textAlign: TextAlign.center,
                             ),
-                          )
-                        : ListView.builder(
-                            key: ValueKey('examplesList_${widget.name}_${displayExamples.length}'),
-                            cacheExtent: 500,
-                            padding: const EdgeInsets.all(8),
-                            itemCount: displayExamples.length,
-                            itemBuilder: (context, index) {
-                              final example = displayExamples[index];
-                              final mood = example['mood'] as String;
-                              final text = example['text'].toString();
-                              final wasLong = example['isLong'] as bool;
-                              final textLength = text.length;
-                              double containerHeight = 60;
-                              int maxLines = 3;
+                          );
+                        },
+                      ),
+                      const SizedBox(width: 8),
+                      const Icon(Icons.arrow_drop_down, size: 24, color: Color(0xFF7539BB)),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: ListView.builder(
+                    key: ValueKey('examplesList_${widget.name}_${displayExamples.length}'),
+                    cacheExtent: 500,
+                    padding: const EdgeInsets.all(8),
+                    itemCount: displayExamples.length,
+                    itemBuilder: (context, index) {
+                      final example = displayExamples[index];
+                      final mood = example['mood'] as String;
+                      final text = example['text'].toString();
+                      final wasLong = example['isLong'] as bool;
+                      final textLength = text.length;
+                      double containerHeight = 60;
+                      int maxLines = 3;
 
-                              // 텍스트 길이에 따라 말풍선 높이와 줄 수 조정
-                              if (wasLong) {
-                                containerHeight = 80;
-                                maxLines = 5;
-                              } else if (textLength > 40) {
-                                containerHeight = 80;
-                                maxLines = 5;
-                              }
-                              if (textLength > 70) {
-                                containerHeight = 100;
-                                maxLines = 5;
-                              }
-                              if (textLength > 100) {
-                                containerHeight = 120;
-                                maxLines = 5;
-                              }
-                              // 한 줄로 길게 나올 때 두 줄로 줄바꿈하도록 조정
-                              if (!wasLong && textLength > 20 && textLength <= 40) {
-                                containerHeight = 80; // 두 줄을 위해 높이 조정
-                                maxLines = 2;
-                              }
+                      if (wasLong) {
+                        containerHeight = 80;
+                        maxLines = 5;
+                      } else if (textLength > 40) {
+                        containerHeight = 80;
+                        maxLines = 5;
+                      }
+                      if (textLength > 70) {
+                        containerHeight = 100;
+                        maxLines = 5;
+                      }
+                      if (textLength > 100) {
+                        containerHeight = 120;
+                        maxLines = 5;
+                      }
+                      if (!wasLong && textLength > 20 && textLength <= 40) {
+                        containerHeight = 80;
+                        maxLines = 2;
+                      }
 
-                              return ScaleTransition(
-                                scale: CurvedAnimation(
-                                  parent: _animationControllers[index],
-                                  curve: Curves.bounceOut,
-                                ),
-                                child: Dismissible(
-                                  key: Key('${example['text']}_$index'),
-                                  direction: DismissDirection.endToStart,
-                                  onDismissed: (direction) {
-                                    setState(() {
-                                      if (index < currentExamples.length) {
-                                        currentExamples.removeAt(index);
-                                      } else {
-                                        pastExamples.removeAt(index - currentExamples.length);
-                                      }
-                                      _animationControllers.removeAt(index).dispose();
-                                    });
-                                    _saveChat();
-                                  },
-                                  background: AnimatedContainer(
-                                    duration: const Duration(milliseconds: 300),
-                                    curve: Curves.easeInOut,
-                                    decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        begin: Alignment.centerLeft,
-                                        end: Alignment.centerRight,
-                                        colors: gradientColors,
-                                        stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
-                                      ),
-                                      borderRadius: BorderRadius.circular(12),
+                      return ScaleTransition(
+                        scale: CurvedAnimation(
+                          parent: _animationControllers[index],
+                          curve: Curves.bounceOut,
+                        ),
+                        child: Dismissible(
+                          key: Key('${example['text']}_$index'),
+                          direction: DismissDirection.endToStart,
+                          onDismissed: (direction) {
+                            setState(() {
+                              if (index < currentExamples.length) {
+                                currentExamples.removeAt(index);
+                              } else {
+                                pastExamples.removeAt(index - currentExamples.length);
+                              }
+                              _animationControllers.removeAt(index).dispose();
+                            });
+                            _saveChat();
+                          },
+                          background: AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
+                                colors: gradientColors,
+                                stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            alignment: Alignment.centerRight,
+                            padding: const EdgeInsets.only(right: 20),
+                            child: const Icon(Icons.delete, color: Colors.white, size: 30),
+                          ),
+                          child: GestureDetector(
+                            onLongPress: () {
+                              if (mounted) {
+                                setState(() {
+                                  example['isSaved'] = !(example['isSaved'] as bool);
+                                  if (example['isSaved']) _saveQuote(example['text']);
+                                });
+                              }
+                            },
+                            child: Container(
+                              margin: const EdgeInsets.symmetric(vertical: 4),
+                              padding: const EdgeInsets.all(16),
+                              height: containerHeight,
+                              decoration: BoxDecoration(
+                                color: widget.isDarkTheme ? Colors.black.withValues(alpha: 0.8) : Colors.white.withValues(alpha: 0.8),
+                                borderRadius: BorderRadius.circular(8),
+                                border: index == 0
+                                    ? Border.all(
+                                        width: 4,
+                                        color: const Color(0xFFC56BFF),
+                                      )
+                                    : null,
+                                boxShadow: index < 2
+                                    ? [
+                                        BoxShadow(
+                                          color: widget.isDarkTheme ? Colors.white.withValues(alpha: 0.3) : Colors.grey.withValues(alpha: 0.3),
+                                          offset: const Offset(4, 4),
+                                          blurRadius: 8,
+                                          spreadRadius: 1,
+                                        ),
+                                        BoxShadow(
+                                          color: Colors.white.withValues(alpha: 0.1),
+                                          offset: const Offset(-2, -2),
+                                          blurRadius: 4,
+                                          spreadRadius: 1,
+                                        ),
+                                        BoxShadow(
+                                          color: Colors.black.withValues(alpha: 0.2),
+                                          offset: const Offset(2, 2),
+                                          blurRadius: 8,
+                                          spreadRadius: 1,
+                                        ),
+                                      ]
+                                    : [
+                                        BoxShadow(
+                                          color: widget.isDarkTheme ? Colors.white.withValues(alpha: 0.3) : Colors.grey.withValues(alpha: 0.3),
+                                          offset: const Offset(4, 4),
+                                          blurRadius: 8,
+                                          spreadRadius: 1,
+                                        ),
+                                        BoxShadow(
+                                          color: Colors.white.withValues(alpha: 0.1),
+                                          offset: const Offset(-2, -2),
+                                          blurRadius: 4,
+                                          spreadRadius: 1,
+                                        ),
+                                      ],
+                              ),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 8, right: 12),
+                                    child: Image.asset(
+                                      moodIcons[mood]!,
+                                      width: 36,
+                                      height: 36,
+                                      color: widget.isDarkTheme && mood == '시크' ? Colors.white : moodColors[mood],
+                                      colorBlendMode: BlendMode.srcIn,
                                     ),
-                                    alignment: Alignment.centerRight,
-                                    padding: const EdgeInsets.only(right: 20),
-                                    child: const Icon(Icons.delete, color: Colors.white, size: 30),
                                   ),
-                                  child: GestureDetector(
-                                    onLongPress: () {
+                                  Expanded(
+                                    child: AutoSizeText(
+                                      text,
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        color: widget.isDarkTheme ? Colors.white : const Color(0xFF333333),
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w500,
+                                        height: 1.5,
+                                        wordSpacing: 1.5,
+                                      ),
+                                      maxLines: maxLines,
+                                      minFontSize: 10,
+                                      maxFontSize: 16,
+                                      stepGranularity: 0.1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  GestureDetector(
+                                    onTap: () {
+                                      Clipboard.setData(ClipboardData(text: example['text']));
                                       if (mounted) {
-                                        setState(() {
-                                          example['isSaved'] = !(example['isSaved'] as bool);
-                                          if (example['isSaved']) _saveQuote(example['text']);
-                                        });
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              "클립보드에 복사됨!".tr(),
+                                              style: const TextStyle(wordSpacing: 1.5),
+                                            ),
+                                            duration: const Duration(seconds: 1),
+                                          ),
+                                        );
                                       }
                                     },
-                                    child: Container(
-                                      margin: const EdgeInsets.symmetric(vertical: 4),
-                                      padding: const EdgeInsets.all(16),
-                                      height: containerHeight,
-                                      decoration: BoxDecoration(
-                                        color: widget.isDarkTheme ? Colors.black.withValues(alpha: 0.8) : Colors.white.withValues(alpha: 0.8),
-                                        borderRadius: BorderRadius.circular(8),
-                                        border: index == 0
-                                            ? Border.all(
-                                                width: 4,
-                                                color: const Color(0xFFC56BFF),
-                                              )
-                                            : null,
-                                        boxShadow: index < 2
-                                            ? [
-                                                BoxShadow(
-                                                  color: widget.isDarkTheme ? Colors.white.withValues(alpha: 0.3) : Colors.grey.withValues(alpha: 0.3),
-                                                  offset: const Offset(4, 4),
-                                                  blurRadius: 8,
-                                                  spreadRadius: 1,
-                                                ),
-                                                BoxShadow(
-                                                  color: Colors.white.withValues(alpha: 0.1),
-                                                  offset: const Offset(-2, -2),
-                                                  blurRadius: 4,
-                                                  spreadRadius: 1,
-                                                ),
-                                                BoxShadow(
-                                                  color: Colors.black.withValues(alpha: 0.2),
-                                                  offset: const Offset(2, 2),
-                                                  blurRadius: 8,
-                                                  spreadRadius: 1,
-                                                ),
-                                              ]
-                                            : [
-                                                BoxShadow(
-                                                  color: widget.isDarkTheme ? Colors.white.withValues(alpha: 0.3) : Colors.grey.withValues(alpha: 0.3),
-                                                  offset: const Offset(4, 4),
-                                                  blurRadius: 8,
-                                                  spreadRadius: 1,
-                                                ),
-                                                BoxShadow(
-                                                  color: Colors.white.withValues(alpha: 0.1),
-                                                  offset: const Offset(-2, -2),
-                                                  blurRadius: 4,
-                                                  spreadRadius: 1,
-                                                ),
-                                              ],
-                                      ),
-                                      child: Row(
-                                        crossAxisAlignment: CrossAxisAlignment.center,
-                                        children: [
-                                          Padding(
-                                            padding: const EdgeInsets.only(left: 8, right: 12),
-                                            child: Image.asset(
-                                              moodIcons[mood]!,
-                                              width: 36, // 24 * 1.5
-                                              height: 36, // 24 * 1.5
-                                              color: widget.isDarkTheme && mood == '시크' ? Colors.white : moodColors[mood],
-                                              colorBlendMode: BlendMode.srcIn, // 검은색 PNG에 색상 강하게 적용
-                                            ),
-                                          ),
-                                          Expanded(
-                                            child: AutoSizeText(
-                                              text,
-                                              textAlign: TextAlign.center,
-                                              style: TextStyle(
-                                                color: widget.isDarkTheme ? Colors.white : const Color(0xFF333333),
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.w500,
-                                                height: 1.5,
-                                                wordSpacing: 1.5,
-                                              ),
-                                              maxLines: maxLines,
-                                              minFontSize: 10,
-                                              maxFontSize: 16,
-                                              stepGranularity: 0.1,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ),
-                                          GestureDetector(
-                                            onTap: () {
-                                              Clipboard.setData(ClipboardData(text: example['text']));
-                                              if (mounted) {
-                                                ScaffoldMessenger.of(context).showSnackBar(
-                                                  SnackBar(
-                                                    content: Text(
-                                                      "클립보드에 복사됨!".tr(),
-                                                      style: const TextStyle(wordSpacing: 1.5),
-                                                    ),
-                                                    duration: const Duration(seconds: 1),
-                                                  ),
-                                                );
-                                              }
-                                            },
-                                            child: const Icon(Icons.content_copy, size: 18, color: Color(0xFF7539BB)),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
+                                    child: const Icon(Icons.content_copy, size: 18, color: Color(0xFF7539BB)),
                                   ),
-                                ),
-                              );
-                            },
+                                ],
+                              ),
+                            ),
                           ),
+                        ),
+                      );
+                    },
                   ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Row(
+                ),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         Expanded(
@@ -3679,7 +3667,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                           ),
                         ),
                         Expanded(
-                          child: Row(
+  child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Checkbox(
@@ -3717,10 +3705,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                         ),
                       ],
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Row(
+                    Row(
                       children: [
                         Expanded(
                           child: SliderTheme(
@@ -3744,95 +3729,29 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                         ),
                       ],
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(30),
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                        child: Container(
-                          padding: const EdgeInsets.only(left: 22),
-                          decoration: BoxDecoration(
-                            color: widget.isDarkTheme ? Colors.black.withValues(alpha: 0.8) : Colors.white.withValues(alpha: 0.8),
-                            borderRadius: BorderRadius.circular(30),
-                            border: Border.all(
-                              color: Colors.black.withValues(alpha: 0.2),
-                              width: 1,
-                            ),
-                          ),
-                          child: TextField(
-                            controller: _opponentController,
-                            decoration: InputDecoration(
-                              hintText: "상대방의 말을 입력하세요...".tr(),
-                              hintStyle: TextStyle(color: widget.isDarkTheme ? Colors.white70 : Colors.grey, fontSize: 18, wordSpacing: 1.5),
-                              border: InputBorder.none,
-                            ),
-                            style: TextStyle(color: widget.isDarkTheme ? Colors.white : Colors.black87, fontSize: 18, wordSpacing: 1.5),
-                            maxLines: 1,
-                            textAlign: TextAlign.left,
-                          ),
-                        ),
+                  ],
+                ),
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child: SingleChildScrollView(
+                    physics: const NeverScrollableScrollPhysics(),
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        bottom: MediaQuery.of(context).viewInsets.bottom > 0
+                            ? MediaQuery.of(context).viewInsets.bottom + 12 // 키보드 올라올 때 12px 위
+                            : MediaQuery.of(context).viewPadding.bottom + 12, // 키보드 없을 때 내비게이션 바 위 12px
+                        left: 12, // 양옆 12px
+                        right: 12,
                       ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Row(
-                      children: [
-                        GestureDetector(
-                          onTapDown: (_) => _moodButtonController.forward(),
-                          onTapUp: (_) {
-                            _moodButtonController.reverse();
-                            _showMoodSelectionDialog();
-                          },
-                          onTapCancel: () => _moodButtonController.reverse(),
-                          child: ScaleTransition(
-                            scale: _moodButtonScale,
-                            child: Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                Container(
-                                  width: 72, // 60 * 1.2 (1.5배에서 약간 줄임)
-                                  height: 72, // 60 * 1.2
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: widget.isDarkTheme ? Colors.black.withValues(alpha: 0.8) : Colors.white.withValues(alpha: 0.8),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withValues(alpha: 0.3),
-                                        offset: const Offset(2, 2),
-                                        blurRadius: 8,
-                                        spreadRadius: 1,
-                                      ),
-                                      BoxShadow(
-                                        color: Colors.white.withValues(alpha: 0.1),
-                                        offset: const Offset(-2, -2),
-                                        blurRadius: 4,
-                                        spreadRadius: 1,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Image.asset(
-                                  moodIcons[selectedMood]!,
-                                  width: 58, // 48 * 1.2 (1.5배에서 약간 줄임)
-                                  height: 58, // 48 * 1.2
-                                  color: widget.isDarkTheme && selectedMood == '시크' ? Colors.white : moodColors[selectedMood],
-                                  colorBlendMode: BlendMode.srcIn, // 검은색 PNG에 색상 강하게 적용
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: ClipRRect(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          ClipRRect(
                             borderRadius: BorderRadius.circular(30),
                             child: BackdropFilter(
                               filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                               child: Container(
-                                padding: const EdgeInsets.only(left: 22, right: 8),
+                                padding: const EdgeInsets.symmetric(horizontal: 12), // 입력창 양옆 12px
                                 decoration: BoxDecoration(
                                   color: widget.isDarkTheme ? Colors.black.withValues(alpha: 0.8) : Colors.white.withValues(alpha: 0.8),
                                   borderRadius: BorderRadius.circular(30),
@@ -3841,82 +3760,165 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                                     width: 1,
                                   ),
                                 ),
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      child: TextField(
-                                        controller: _myController,
-                                        decoration: InputDecoration(
-                                          hintText: "내 말을 입력하세요...".tr(),
-                                          hintStyle: TextStyle(color: widget.isDarkTheme ? Colors.white70 : Colors.grey, fontSize: 18, wordSpacing: 1.5),
-                                          border: InputBorder.none,
-                                        ),
-                                        style: TextStyle(color: widget.isDarkTheme ? Colors.white : Colors.black87, fontSize: 18, wordSpacing: 1.5),
-                                        maxLines: 1,
-                                        textAlign: TextAlign.left,
-                                      ),
-                                    ),
-                                    GestureDetector(
-                                      onTapDown: (_) => _sendButtonController.forward(),
-                                      onTapUp: (_) {
-                                        _sendButtonController.reverse();
-                                        fetchResponse();
-                                      },
-                                      onTapCancel: () => _sendButtonController.reverse(),
-                                      child: ScaleTransition(
-                                        scale: _sendButtonScale,
-                                        child: Container(
-                                          width: 40,
-                                          height: 40,
-                                          decoration: BoxDecoration(
-                                            shape: BoxShape.circle,
-                                            color: selectedMood == '시크' ? Colors.black : moodColors[selectedMood],
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: Colors.black.withValues(alpha: 0.4),
-                                                offset: const Offset(2, 2),
-                                                blurRadius: 6,
-                                                spreadRadius: 1,
-                                              ),
-                                              BoxShadow(
-                                                color: Colors.white.withValues(alpha: 0.1),
-                                                offset: const Offset(-2, -2),
-                                                blurRadius: 4,
-                                                spreadRadius: 1,
-                                              ),
-                                            ],
-                                          ),
-                                          child: isLoading
-                                              ? Transform.scale(
-                                                  scale: 0.6,
-                                                  child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 4),
-                                                )
-                                              : const Icon(
-                                                  Icons.send,
-                                                  size: 24,
-                                                  color: Colors.white,
-                                                ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                                child: TextField(
+                                  controller: _opponentController,
+                                  decoration: InputDecoration(
+                                    hintText: "상대방의 말을 입력하세요...".tr(),
+                                    hintStyle: TextStyle(color: widget.isDarkTheme ? Colors.white70 : Colors.grey, fontSize: 18, wordSpacing: 1.5),
+                                    border: InputBorder.none,
+                                  ),
+                                  style: TextStyle(color: widget.isDarkTheme ? Colors.white : Colors.black87, fontSize: 18, wordSpacing: 1.5),
+                                  maxLines: 1,
+                                  textAlign: TextAlign.left,
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                      ],
+                          Row(
+                            children: [
+                              GestureDetector(
+                                onTapDown: (_) => _moodButtonController.forward(),
+                                onTapUp: (_) {
+                                  _moodButtonController.reverse();
+                                  _showMoodSelectionDialog();
+                                },
+                                onTapCancel: () => _moodButtonController.reverse(),
+                                child: ScaleTransition(
+                                  scale: _moodButtonScale,
+                                  child: Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      Container(
+                                        width: 62, // 크기 유지
+                                        height: 62,
+                                        margin: const EdgeInsets.all(5), // 양옆/위아래 5px 패딩
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: widget.isDarkTheme ? Colors.black.withValues(alpha: 0.8) : Colors.white.withValues(alpha: 0.8),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black.withValues(alpha: 0.3),
+                                              offset: const Offset(2, 2),
+                                              blurRadius: 8,
+                                              spreadRadius: 1,
+                                            ),
+                                            BoxShadow(
+                                              color: Colors.white.withValues(alpha: 0.1),
+                                              offset: const Offset(-2, -2),
+                                              blurRadius: 4,
+                                              spreadRadius: 1,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Image.asset(
+                                        moodIcons[selectedMood]!,
+                                        width: 48,
+                                        height: 48,
+                                        color: widget.isDarkTheme && selectedMood == '시크' ? Colors.white : moodColors[selectedMood],
+                                        colorBlendMode: BlendMode.srcIn,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(30),
+                                  child: BackdropFilter(
+                                    filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 12), // 입력창 양옆 12px
+                                      decoration: BoxDecoration(
+                                        color: widget.isDarkTheme ? Colors.black.withValues(alpha: 0.8) : Colors.white.withValues(alpha: 0.8),
+                                        borderRadius: BorderRadius.circular(30),
+                                        border: Border.all(
+                                          color: Colors.black.withValues(alpha: 0.2),
+                                          width: 1,
+                                        ),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Expanded(
+                                            child: TextField(
+                                              controller: _myController,
+                                              decoration: InputDecoration(
+                                                hintText: "내 말을 입력하세요...".tr(),
+                                                hintStyle: TextStyle(color: widget.isDarkTheme ? Colors.white70 : Colors.grey, fontSize: 18, wordSpacing: 1.5),
+                                                border: InputBorder.none,
+                                              ),
+                                              style: TextStyle(color: widget.isDarkTheme ? Colors.white : Colors.black87, fontSize: 18, wordSpacing: 1.5),
+                                              maxLines: 1,
+                                              textAlign: TextAlign.left,
+                                            ),
+                                          ),
+                                          GestureDetector(
+                                            onTapDown: (_) => _sendButtonController.forward(),
+                                            onTapUp: (_) {
+                                              _sendButtonController.reverse();
+                                              fetchResponse();
+                                            },
+                                            onTapCancel: () => _sendButtonController.reverse(),
+                                            child: ScaleTransition(
+                                              scale: _sendButtonScale,
+                                              child: Container(
+                                                width: 40,
+                                                height: 40,
+                                                decoration: BoxDecoration(
+                                                  shape: BoxShape.circle,
+                                                  color: selectedMood == '시크' ? Colors.black : moodColors[selectedMood],
+                                                  boxShadow: [
+                                                    BoxShadow(
+                                                      color: Colors.black.withValues(alpha: 0.4),
+                                                      offset: const Offset(2, 2),
+                                                      blurRadius: 6,
+                                                      spreadRadius: 1,
+                                                    ),
+                                                    BoxShadow(
+                                                      color: Colors.white.withValues(alpha: 0.1),
+                                                      offset: const Offset(-2, -2),
+                                                      blurRadius: 4,
+                                                      spreadRadius: 1,
+                                                    ),
+                                                  ],
+                                                ),
+                                                child: isLoading
+                                                    ? Transform.scale(
+                                                        scale: 0.6,
+                                                        child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 4),
+                                                      )
+                                                    : const Icon(
+                                                        Icons.send,
+                                                        size: 24,
+                                                        color: Colors.white,
+                                                      ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
+                ),
+              ],
+            ),
+          );
+        },
+      );
+    },
+  );
 }
+}
+
 
 class Message {
   String text;
@@ -9520,4 +9522,4 @@ class BubbleGroup {
   double getHeight() => maxY - minY;
   String getCombinedText() => messages.map((m) => m.text.trim()).join(' ');
   bool isRightAligned(double screenWidth) => maxX > screenWidth * 0.7;
-} 
+}  
